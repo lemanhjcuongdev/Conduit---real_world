@@ -1,26 +1,45 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import styled from "styled-components";
+
+import AuthProvider from "./store/AuthContext/AuthProvider";
+import { publicRoutes } from "./routes/routes";
+import Header from "./layouts/Header/Header";
+import { useEffect } from "react";
+import useAuthContext from "./hooks/useAuthContext";
+import { loginAction } from "./store/actions";
 
 function App() {
+  // const user_data = JSON.parse(localStorage.getItem("user_data") || "{}");
+  // const { dispatch } = useAuthContext();
+
+  // if (Object.keys(user_data).length > 0) {
+  //   dispatch(loginAction(user_data));
+  // }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <AuthProvider>
+      <Router>
+        <div>
+          <Header />
+          <Container>
+            <Routes>
+              {publicRoutes.map((route, index) => (
+                <Route
+                  key={index}
+                  path={route.path}
+                  element={<route.component />}
+                />
+              ))}
+            </Routes>
+          </Container>
+        </div>
+      </Router>
+    </AuthProvider>
   );
 }
+
+const Container = styled.div`
+  /* width: 1140px; */
+`;
 
 export default App;
