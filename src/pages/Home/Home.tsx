@@ -2,6 +2,9 @@ import useAuthContext from "../../hooks/useAuthContext";
 import NewsFeed from "./NewsFeed";
 
 function HomePage() {
+  //change page's title
+  document.title = "Home - Conduit";
+
   const { state } = useAuthContext();
   const { isAuthenticated } = state;
 

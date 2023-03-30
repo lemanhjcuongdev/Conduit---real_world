@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-globals */
 import { useNavigate } from "react-router-dom";
 import { deleteArticleDetailAPI } from "../../api/article";
 
@@ -10,13 +11,15 @@ function ArticleDeleteButton(props: IDeleteBtnProps) {
   const navigate = useNavigate();
 
   const handleDeleteArticle = () => {
-    deleteArticleDetailAPI(slug)
-      .then(() => {
-        navigate(`/`);
-      })
-      .catch((e) => {
-        console.log(e);
-      });
+    if (confirm("Are you sure to delete this article?")) {
+      deleteArticleDetailAPI(slug)
+        .then(() => {
+          navigate(`/`);
+        })
+        .catch((e) => {
+          console.log(e);
+        });
+    }
   };
 
   return (
