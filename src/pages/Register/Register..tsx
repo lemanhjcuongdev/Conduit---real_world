@@ -14,6 +14,9 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
+  //change page's title
+  document.title = "Register - Conduit";
+
   const { state, dispatch } = useAuthContext();
   const { user } = state;
 

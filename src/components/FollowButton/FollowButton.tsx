@@ -1,14 +1,23 @@
+import { MouseEventHandler } from "react";
+
 interface IFollowBtnProps {
-  className: string;
   username: string;
   isFollowing: boolean;
+  handleFollow: MouseEventHandler;
 }
 
 function FollowButton(props: IFollowBtnProps) {
-  const { className, username, isFollowing } = props;
+  const { username, isFollowing, handleFollow } = props;
 
   return (
-    <button className="btn btn-sm btn-outline-secondary action-btn">
+    <button
+      className={
+        isFollowing
+          ? "btn btn-sm action-btn ng-binding btn-secondary"
+          : "btn btn-sm btn-outline-secondary action-btn"
+      }
+      onClick={handleFollow}
+    >
       <i className="ion-plus-round"></i>
       &nbsp; {isFollowing ? "Unfollow" : "Follow"} {username}
     </button>

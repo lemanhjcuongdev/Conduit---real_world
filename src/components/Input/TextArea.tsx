@@ -9,7 +9,7 @@ interface ITextAreaProps {
   setError?: (error: string) => void;
 }
 
-function TextArea(props: ITextAreaProps) {
+const TextArea = memo((props: ITextAreaProps) => {
   const { value, className, placeholder, rows, setValue, setError } = props;
 
   const handleChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
@@ -26,6 +26,5 @@ function TextArea(props: ITextAreaProps) {
       onChange={handleChange}
     />
   );
-}
-
-export default memo(TextArea);
+});
+export default TextArea;

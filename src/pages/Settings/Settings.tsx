@@ -17,6 +17,9 @@ function SettingsPage() {
   const [email, setEmail] = useState(user?.email || "");
   const [newPassword, setNewPassword] = useState("");
 
+  //change page's title
+  document.title = "Settings - Conduit";
+
   //redirect to some route
   const redirect = useNavigate();
 

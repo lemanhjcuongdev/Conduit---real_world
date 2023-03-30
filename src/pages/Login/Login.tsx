@@ -1,4 +1,4 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, useCallback, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 
 import { loginAPI } from "../../api/user";
@@ -12,6 +12,9 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+
+  //change page's title
+  document.title = "Login - Conduit";
 
   const { state, dispatch } = useAuthContext();
   const { user } = state;
@@ -61,7 +64,7 @@ function LoginPage() {
                     className="form-control form-control-lg"
                     placeholder="Email"
                     value={email}
-                    setValue={setEmail}
+                    setValue={useCallback(setEmail, [email])}
                     setError={setError}
                   />
                 </fieldset>
@@ -71,7 +74,7 @@ function LoginPage() {
                     placeholder="Password"
                     value={password}
                     type="password"
-                    setValue={setPassword}
+                    setValue={useCallback(setPassword, [password])}
                     setError={setError}
                   />
                 </fieldset>

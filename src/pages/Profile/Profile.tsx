@@ -1,25 +1,103 @@
-import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import { getProfileAPI } from "../../api/profile";
+import { useCallback, useEffect, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+
+import {
+  getArticlesByProfileAPI,
+  getFavoritedArticlesAPI,
+} from "../../api/article";
+import { followAPI, getProfileAPI, unfollowAPI } from "../../api/profile";
+import ArticleItem from "../../components/ArticleItem/ArticleItem";
+import FollowButton from "../../components/FollowButton/FollowButton";
 import useAuthContext from "../../hooks/useAuthContext";
-import IUserProps from "../Login/type";
+import { ARTICLES_COUNT_PER_PROFILE_PAGE } from "../../constants/constants";
 
 function ProfilePage() {
   const { profile } = useParams();
 
   const { state } = useAuthContext();
-  const { user } = state;
+  const { user, isAuthenticated } = state;
 
-  const [author, setAuthor] = useState<IUserProps | null>(null);
-  const [currentTab, setCurrentTab] = useState("my-article");
+  //change page's title
+  document.title = `@${user?.username} - Conduit`;
 
+  const [author, setAuthor] = useState<{
+    bio: string;
+    following: boolean;
+    image: string;
+    username: string;
+  } | null>(null);
+  const [currentTab, setCurrentTab] = useState("my-articles");
+  const [articles, setArticles] = useState<[] | null>(null);
+  const [pageCount, setPageCount] = useState<number>();
+  const [currentPage, setCurrentPage] = useState(0);
+
+  //call API
   useEffect(() => {
-    if (currentTab === "my-article" && profile) {
+    if (currentTab === "my-articles" && profile) {
       getProfileAPI(profile).then((data) => {
         setAuthor(data.profile);
+        const profileUsername = data.profile.username.replaceAll(" ", "+");
+        getArticlesByProfileAPI({ author: profileUsername }).then(
+          (articlesData) => {
+            const dataLength = articlesData.articles.length;
+
+            const pageCount = Math.ceil(
+              dataLength / ARTICLES_COUNT_PER_PROFILE_PAGE
+            );
+
+            const articlesPerPage = articlesData.articles.slice(
+              currentPage * ARTICLES_COUNT_PER_PROFILE_PAGE,
+              (currentPage + 1) * ARTICLES_COUNT_PER_PROFILE_PAGE
+            );
+
+            setArticles(articlesPerPage);
+            setPageCount(pageCount);
+          }
+        );
+      });
+    } else if (currentTab === "favorited-articles" && profile) {
+      getProfileAPI(profile).then((data) => {
+        setAuthor(data.profile);
+        const profileUsername = data.profile.username.replaceAll(" ", "+");
+        getFavoritedArticlesAPI({ favoritedUsername: profileUsername }).then(
+          (articlesData) => {
+            const dataLength = articlesData.articles.length;
+
+            const pageCount = Math.ceil(
+              dataLength / ARTICLES_COUNT_PER_PROFILE_PAGE
+            );
+
+            const articlesPerPage = articlesData.articles.slice(
+              currentPage * ARTICLES_COUNT_PER_PROFILE_PAGE,
+              (currentPage + 1) * ARTICLES_COUNT_PER_PROFILE_PAGE
+            );
+
+            setArticles(articlesPerPage);
+            setPageCount(pageCount);
+          }
+        );
       });
     }
-  }, []);
+  }, [currentTab, currentPage]);
+
+  //navigate
+  const navigate = useNavigate();
+  //follow user
+  const [isFollowing, setFollowing] = useState(author?.following);
+
+  const handleFollow = useCallback(() => {
+    if (!isAuthenticated) {
+      navigate("/login");
+    } else if (isFollowing) {
+      unfollowAPI(author?.username || "").then((data) =>
+        setFollowing(data.profile.following)
+      );
+    } else {
+      followAPI(author?.username || "").then((data) =>
+        setFollowing(data.profile.following)
+      );
+    }
+  }, [isFollowing, author]);
 
   return (
     <div className="profile-page">
@@ -34,7 +112,7 @@ function ProfilePage() {
               />
               <h4>{author?.username}</h4>
               <p>{author?.bio}</p>
-              {user && user.username == author?.username ? (
+              {user && user.username === author?.username ? (
                 <Link
                   className="btn btn-sm btn-outline-secondary action-btn"
                   to="/settings"
@@ -43,10 +121,11 @@ function ProfilePage() {
                   &nbsp; Edit Profile Settings
                 </Link>
               ) : (
-                <button className="btn btn-sm btn-outline-secondary action-btn">
-                  <i className="ion-plus-round"></i>
-                  &nbsp; Follow {author?.username}
-                </button>
+                <FollowButton
+                  username={author?.username || ""}
+                  isFollowing={isFollowing || false}
+                  handleFollow={handleFollow}
+                />
               )}
             </div>
           </div>
@@ -59,68 +138,75 @@ function ProfilePage() {
             <div className="articles-toggle">
               <ul className="nav nav-pills outline-active">
                 <li className="nav-item">
-                  <a className="nav-link active" href="">
+                  <Link
+                    className={
+                      currentTab === "my-articles"
+                        ? "nav-link active"
+                        : "nav-link"
+                    }
+                    to="#"
+                    onClick={() => {
+                      setCurrentPage(0);
+                      setCurrentTab("my-articles");
+                      setArticles(null);
+                    }}
+                  >
                     My Articles
-                  </a>
+                  </Link>
                 </li>
                 <li className="nav-item">
-                  <a className="nav-link" href="">
+                  <Link
+                    className={
+                      currentTab === "favorited-articles"
+                        ? "nav-link active"
+                        : "nav-link"
+                    }
+                    to="#"
+                    onClick={() => {
+                      setCurrentPage(0);
+                      setCurrentTab("favorited-articles");
+                      setArticles(null);
+                    }}
+                  >
                     Favorited Articles
-                  </a>
+                  </Link>
                 </li>
               </ul>
             </div>
-
-            <div className="article-preview">
-              <div className="article-meta">
-                <a href="">
-                  <img src="http://i.imgur.com/Qr71crq.jpg" />
-                </a>
-                <div className="info">
-                  <a href="" className="author">
-                    Eric Simons
-                  </a>
-                  <span className="date">January 20th</span>
-                </div>
-                <button className="btn btn-outline-primary btn-sm pull-xs-right">
-                  <i className="ion-heart"></i> 29
-                </button>
+            {articles && articles.length === 0 ? (
+              <div className="article-preview">
+                No articles are here ... yet
               </div>
-              <a href="" className="preview-link">
-                <h1>How to build webapps that scale</h1>
-                <p>This is the description for the post.</p>
-                <span>Read more...</span>
-              </a>
-            </div>
-
-            <div className="article-preview">
-              <div className="article-meta">
-                <a href="">
-                  <img src="http://i.imgur.com/N4VcUeJ.jpg" />
-                </a>
-                <div className="info">
-                  <a href="" className="author">
-                    Albert Pai
-                  </a>
-                  <span className="date">January 20th</span>
-                </div>
-                <button className="btn btn-outline-primary btn-sm pull-xs-right">
-                  <i className="ion-heart"></i> 32
-                </button>
-              </div>
-              <a href="" className="preview-link">
-                <h1>
-                  The song you won't ever stop singing. No matter how hard you
-                  try.
-                </h1>
-                <p>This is the description for the post.</p>
-                <span>Read more...</span>
-                <ul className="tag-list">
-                  <li className="tag-default tag-pill tag-outline">Music</li>
-                  <li className="tag-default tag-pill tag-outline">Song</li>
-                </ul>
-              </a>
-            </div>
+            ) : articles === null ? (
+              <div className="article-preview">Loading...</div>
+            ) : (
+              <>
+                {articles &&
+                  articles.map((article, index) => {
+                    return <ArticleItem key={index} article={article} />;
+                  })}
+              </>
+            )}
+            <ul className="pagination">
+              {pageCount && pageCount !== 0
+                ? new Array(pageCount).fill(undefined).map((page, index) => (
+                    <li
+                      className={
+                        currentPage === index
+                          ? "page-item ng-scope active"
+                          : "page-item ng-scope"
+                      }
+                      style={{
+                        cursor: "pointer",
+                      }}
+                      key={index}
+                      onClick={() => setCurrentPage(index)}
+                    >
+                      <div className="page-link ng-binding">{index + 1}</div>
+                    </li>
+                  ))
+                : ""}
+            </ul>
           </div>
         </div>
       </div>

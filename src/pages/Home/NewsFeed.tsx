@@ -2,13 +2,13 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 import {
-  getAriclesAPI,
-  getAriclesByTagAPI,
+  getArticlesAPI,
+  getArticlesByTagAPI,
   getFeedFromUserAPI,
 } from "../../api/article";
 import ArticleItem from "../../components/ArticleItem/ArticleItem";
 import IArticleProps from "../../components/ArticleItem/types";
-import { ARTICLES_COUNT_PER_PAGE } from "../../constants/constants";
+import { ARTICLES_COUNT_PER_HOME_PAGE } from "../../constants/constants";
 import useAuthContext from "../../hooks/useAuthContext";
 import Tags from "./Tags";
 
@@ -19,11 +19,19 @@ function NewsFeed(props: INewsFeedProps) {
   const [pageCount, setPageCount] = useState<number>(20);
   const [currentPage, setCurrentPage] = useState(0);
   const [selectedTag, setSelectedTag] = useState("");
-  const [currentTab, setCurrentTab] = useState("global-feed");
 
   //get authenticated state
   const { state } = useAuthContext();
   const { isAuthenticated } = state;
+
+  const [currentTab, setCurrentTab] = useState(() => {
+    let initialValue = "global-feed";
+    isAuthenticated
+      ? (initialValue = "your-feed")
+      : (initialValue = "global-feed");
+
+    return initialValue;
+  });
 
   useEffect(() => {
     currentTab === "your-feed"
@@ -33,11 +41,13 @@ function NewsFeed(props: INewsFeedProps) {
         }).then((data: { articles: IArticleProps[] }) => {
           const dataLength = data.articles.length;
 
-          const pageCount = Math.ceil(dataLength / ARTICLES_COUNT_PER_PAGE);
+          const pageCount = Math.ceil(
+            dataLength / ARTICLES_COUNT_PER_HOME_PAGE
+          );
 
           const articlesPerPage = data.articles.slice(
-            currentPage * ARTICLES_COUNT_PER_PAGE,
-            (currentPage + 1) * ARTICLES_COUNT_PER_PAGE
+            currentPage * ARTICLES_COUNT_PER_HOME_PAGE,
+            (currentPage + 1) * ARTICLES_COUNT_PER_HOME_PAGE
           );
 
           setArticles(articlesPerPage);
@@ -45,26 +55,28 @@ function NewsFeed(props: INewsFeedProps) {
         })
       : // if you haven't clicked on any tags yet
       selectedTag !== ""
-      ? getAriclesByTagAPI({
+      ? getArticlesByTagAPI({
           limit: 200,
           offset: 0,
           tagname: selectedTag,
         }).then((data: { articles: IArticleProps[] }) => {
           const dataLength = data.articles.length;
 
-          const pageCount = Math.ceil(dataLength / ARTICLES_COUNT_PER_PAGE);
+          const pageCount = Math.ceil(
+            dataLength / ARTICLES_COUNT_PER_HOME_PAGE
+          );
 
           const articlesPerPage = data.articles.slice(
-            currentPage * ARTICLES_COUNT_PER_PAGE,
-            (currentPage + 1) * ARTICLES_COUNT_PER_PAGE
+            currentPage * ARTICLES_COUNT_PER_HOME_PAGE,
+            (currentPage + 1) * ARTICLES_COUNT_PER_HOME_PAGE
           );
 
           setArticles(articlesPerPage);
           setPageCount(pageCount);
         })
-      : getAriclesAPI({
-          limit: ARTICLES_COUNT_PER_PAGE,
-          offset: currentPage * ARTICLES_COUNT_PER_PAGE,
+      : getArticlesAPI({
+          limit: ARTICLES_COUNT_PER_HOME_PAGE,
+          offset: currentPage * ARTICLES_COUNT_PER_HOME_PAGE,
         }).then((data: { articles: IArticleProps[] }) => {
           setArticles(data.articles);
         });

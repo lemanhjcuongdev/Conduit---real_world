@@ -1,4 +1,3 @@
-import axios from "axios";
 import { API_ROOT } from "../../constants/constants";
 
 export const postFavoriteAPI = async (slug: string) => {

@@ -1,4 +1,9 @@
-import { ChangeEvent, HTMLInputTypeAttribute, memo } from "react";
+import {
+  ChangeEvent,
+  HTMLInputTypeAttribute,
+  KeyboardEventHandler,
+  memo,
+} from "react";
 
 interface IInputProps {
   value?: string;
@@ -7,9 +12,10 @@ interface IInputProps {
   className?: string;
   setValue?: (value: string) => void;
   setError?: (error: string) => void;
+  handleAddToList?: KeyboardEventHandler<HTMLInputElement>;
 }
 
-function Input(props: IInputProps) {
+const Input = memo((props: IInputProps) => {
   const {
     value,
     className,
@@ -17,6 +23,7 @@ function Input(props: IInputProps) {
     type = "text",
     setValue,
     setError,
+    handleAddToList,
   } = props;
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -31,8 +38,9 @@ function Input(props: IInputProps) {
       type={type}
       value={value}
       onChange={handleChange}
+      onKeyDown={handleAddToList}
     />
   );
-}
+});
 
-export default memo(Input);
+export default Input;

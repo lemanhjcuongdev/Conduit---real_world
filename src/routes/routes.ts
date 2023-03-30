@@ -7,6 +7,8 @@ import RegisterPage from "../pages/Register/Register.";
 import SettingsPage from "../pages/Settings/Settings";
 import EditorPage from "../pages/Editor/EditorPage";
 import ProfilePage from "../pages/Profile/Profile";
+import ArticlePage from "../pages/Article/Article";
+import EditorExistArticlePage from "../pages/Editor/EditorExistPage";
 
 const publicRoutes = [
   {
@@ -32,6 +34,14 @@ const publicRoutes = [
   {
     path: routerConfig.profile,
     component: ProfilePage,
+  },
+  {
+    path: routerConfig.articleDetail,
+    component: ArticlePage,
+  },
+  {
+    path: routerConfig.editorExistArticle,
+    component: EditorExistArticlePage,
   },
 ];
 
